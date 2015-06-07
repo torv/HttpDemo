@@ -7,13 +7,19 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import android.R.integer;
 import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -22,6 +28,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener {
+
+    private final static String tag = "MainActivity";
 
     private Button mBtnStart;
     private TextView mTvShowTextView;
@@ -36,8 +44,8 @@ public class MainActivity extends Activity implements OnClickListener {
         mBtnStart.setOnClickListener(this);
 
         mTvShowTextView = (TextView) findViewById(R.id.tv_show);
-        
-        mPbLoading = (ProgressBar)findViewById(R.id.pb_load);
+
+        mPbLoading = (ProgressBar) findViewById(R.id.pb_load);
     }
 
     @Override
@@ -104,17 +112,47 @@ public class MainActivity extends Activity implements OnClickListener {
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
 
+            Log.e(tag, "connect");
             conn.connect();
 
+            Log.e(tag, "getResponseCode");
             int response = conn.getResponseCode();
-            Log.e("torv", "response code = " + response);
+            Log.e(tag, "response code = " + response);
+
+            Map<String, List<String>> headersMap = conn.getHeaderFields();
+            Log.e(tag, "headers = " + headersMap.toString());
+            handleHeadersMap(headersMap);
 
             is = conn.getInputStream();
+            Log.e(tag, "getInputStream");
 
             return readIt(is, len);
         } finally {
             if (is != null)
                 is.close();
+        }
+    }
+
+    private void handleHeadersMap(Map<String, List<String>> headersMap) {
+        if (null == headersMap || headersMap.isEmpty()) {
+            return;
+        }
+
+        Set<String> keys = headersMap.keySet();
+        Iterator<String> iter = keys.iterator();
+        while (iter.hasNext()) {
+            String key = iter.next();
+            if (TextUtils.isEmpty(key))
+                continue;
+
+            Log.e(tag, "key = " + key);
+            List<String> valueList = headersMap.get(key);
+            Log.e(tag, "--------------------------------------------------valueList");
+            for (int i = 0; i < valueList.size(); i++) {
+                String node = valueList.get(i);
+                Log.e(tag, "index = "+i+", note = "+node);
+            }
+            Log.e(tag, "--------------------------------------------------");
         }
     }
 
